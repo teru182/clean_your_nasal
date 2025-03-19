@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>hanakuso game 3.3</title>
+  <style>
+    body {
+      margin: 0;
+      background: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    canvas {
+      background: #fff;
+      border: 2px solid #000;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // maxRadius を鼻の穴（点線円）の半径として使用
+    const maxRadius = 40; 
+
+    // 左右の鼻の穴の中心位置を設定
+    const nostrils = [
+      { x: 150, y: 200 },
+      { x: 250, y: 200 }
+    ];
+
+    // 鼻くその初期設定（初回は左の鼻の穴から出る）
+    const booger = {
+      x: nostrils[0].x,
+      y: nostrils[0].y,
+      radius: 5
+    };
+
+    let growthRate = 0.02; // 成長速度 (px/ms)
+
+    // ターゲットドットの設定
+    const target = { x: 0, y: 0, radius: 5 };
+    let targetActive = false;
+    let targetTimer = 0;
+    const targetInterval = 2000;  // 2秒ごとに位置更新
+    const targetActivationThreshold = 20; // 鼻くそが20px以上ならターゲット表示
+
+    // ゲームの変数
+    let score = 0;
+    let gameOver = false;
+    const gameDuration = 30000; // 30秒制限
+    let startTime = null;
+    let lastTime = null;
+
+    // 円内のランダムな位置を取得する関数
+    function getRandomPointInCircle(maxR) {
+      const angle = Math.random() * 2 * Math.PI;
+      const r = Math.sqrt(Math.random()) * maxR;
+      return { x: r * Math.cos(angle), y: r * Math.sin(angle) };
+    }
+
+    // ターゲットドットの位置を再設定する関数
+    function repositionTarget() {
+      const maxOffset = Math.max(booger.radius - target.radius, 0);
+      const point = getRandomPointInCircle(maxOffset);
+      target.x = booger.x + point.x;
+      target.y = booger.y + point.y;
+    }
+
+    // 鼻くそがどちらの鼻の穴から出るか、ランダムに決める関数
+    function chooseRandomNostril() {
+      const index = Math.random() < 0.5 ? 0 : 1;
+      booger.x = nostrils[index].x;
+      booger.y = nostrils[index].y;
+    }
+
+    // 更新処理
+    function update(deltaTime) {
+      if (!gameOver) {
+        booger.radius += growthRate * deltaTime;
+        if (booger.radius > maxRadius) {
+          gameOver = true;
+        }
+
+        // 鼻くそが一定サイズ以上ならターゲットを表示
+        if (booger.radius >= targetActivationThreshold) {
+          targetTimer += deltaTime;
+          if (!targetActive) {
+            targetActive = true;
+            targetTimer = 0;
+            repositionTarget();
+          }
+          if (targetTimer >= targetInterval) {
+            repositionTarget();
+            targetTimer = 0;
+          }
+        } else {
+          targetActive = false;
+        }
+      }
+    }
+
+    // 鼻の外側輪郭を描画する関数
+    function drawNose(ctx) {
+      // === 1) 左右の穴（塗りつぶし）を描画 ===
+      ctx.fillStyle = "#555";  // 穴の色（グレー）
+      // 左穴
+      ctx.beginPath();
+      ctx.arc(150, 200, 40, 0, Math.PI * 2);
+      ctx.fill();
+      // 右穴
+      ctx.beginPath();
+      ctx.arc(250, 200, 40, 0, Math.PI * 2);
+      ctx.fill();
+
+      // === 2) 鼻の外側輪郭を描画（線） ===
+      ctx.strokeStyle = "black";
+      ctx.lineWidth = 20; // ちょっと太め
+      ctx.lineCap = "round";
+      // 左側のカーブ
+      ctx.beginPath();
+      ctx.moveTo(110, 250);
+      ctx.quadraticCurveTo(60, 200, 150, 50);
+      ctx.stroke();
+
+      // 右側のカーブ
+      ctx.beginPath();
+      ctx.moveTo(290, 250);
+      ctx.quadraticCurveTo(340, 200, 250, 50);
+      ctx.stroke();
+    }
+
+    // 描画処理
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 鼻の穴（左右の点線の円）の描画
+      ctx.save();
+      ctx.strokeStyle = "gray";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      nostrils.forEach(nostril => {
+        ctx.beginPath();
+        ctx.arc(nostril.x, nostril.y, maxRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      });
+      ctx.restore();
+
+      // 鼻の輪郭の描画
+      drawNose(ctx);
+
+      // 鼻くその描画（緑の円）
+      ctx.fillStyle = "green";
+      ctx.beginPath();
+      ctx.arc(booger.x, booger.y, booger.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ターゲットドットの描画（赤い円）
+      if (targetActive) {
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // スコアと残り時間の表示
+      ctx.fillStyle = "black";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+      const timeLeft = Math.max(0, gameDuration - (performance.now() - startTime));
+      ctx.fillText("Time: " + Math.floor(timeLeft / 1000), 10, 60);
+
+      // ゲームオーバー時のメッセージ
+      if (gameOver || timeLeft <= 0) {
+        gameOver = true;
+        ctx.fillStyle = "red";
+        ctx.font = "24px Arial";
+        ctx.fillText("Game Over! Click to restart", canvas.width / 2 - 150, canvas.height / 2);
+      }
+    }
+
+    // ゲームループ
+    function gameLoop(time) {
+      if (!startTime) {
+        startTime = time;
+        lastTime = time;
+      }
+      const deltaTime = time - lastTime;
+      lastTime = time;
+      update(deltaTime);
+      draw();
+      if (!gameOver && (time - startTime) < gameDuration) {
+        requestAnimationFrame(gameLoop);
+      }
+    }
+    requestAnimationFrame(gameLoop);
+
+    // クリック／タップ共通の処理を関数化
+    function handleTap(x, y) {
+      // ゲームオーバー時は再スタート
+      if (gameOver || (performance.now() - startTime) >= gameDuration) {
+        resetGame();
+        return;
+      }
+
+      // ターゲットドットが表示されている場合、そこがクリック／タップされたら鼻くその成長をリセットする
+      if (targetActive) {
+        const dx = x - target.x;
+        const dy = y - target.y;
+        if (Math.sqrt(dx * dx + dy * dy) <= target.radius) {
+          score += 100;
+          booger.radius = 5; // 鼻くそのサイズをリセット
+          chooseRandomNostril(); // 左右どちらかの鼻の穴に再出現
+          targetActive = false;
+          targetTimer = 0;
+          return;
+        }
+      }
+    }
+
+    // クリックイベント
+    canvas.addEventListener("click", function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      handleTap(x, y);
+    });
+
+    // タッチイベント（スマホ向け）
+    canvas.addEventListener("touchstart", function(e) {
+      e.preventDefault(); // スクロール防止
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      handleTap(x, y);
+    });
+
+    // ゲームリセット処理
+    function resetGame() {
+      score = 0;
+      booger.radius = 5;
+      growthRate = 0.02;
+      gameOver = false;
+      startTime = null;
+      lastTime = null;
+      targetActive = false;
+      targetTimer = 0;
+      chooseRandomNostril();
+      requestAnimationFrame(gameLoop);
+    }
+  </script>
+</body>
+</html>
