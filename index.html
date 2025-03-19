@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <title>hanakuso game 3.5</title>
   <style>
     body {
@@ -15,7 +17,7 @@
     canvas {
       background: #fff;
       border: 2px solid #000;
-      touch-action: none; /* ƒ^ƒbƒ`‚Ìƒuƒ‰ƒEƒU•W€“®ì‚ğ—}§ */
+      touch-action: none; /* ã‚¿ãƒƒãƒæ™‚ã®ãƒ–ãƒ©ã‚¦ã‚¶æ¨™æº–å‹•ä½œã‚’æŠ‘åˆ¶ */
     }
   </style>
 </head>
@@ -25,50 +27,50 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // ƒQ[ƒ€ó‘Ô: "waiting"iŠJn‘Ò‚¿jA"playing"A"gameOver"
+    // ã‚²ãƒ¼ãƒ çŠ¶æ…‹: "waiting"ï¼ˆé–‹å§‹å¾…ã¡ï¼‰ã€"playing"ã€"gameOver"
     let gameState = "waiting";
     let gameOverTime = null;
 
-    // •@‚ÌŒŠ‚ÌƒTƒCƒYi“_ü‰~‚Ì”¼Œaj
+    // é¼»ã®ç©´ã®ã‚µã‚¤ã‚ºï¼ˆç‚¹ç·šå††ã®åŠå¾„ï¼‰
     const maxRadius = 40; 
-    // ¶‰E‚Ì•@‚ÌŒŠ‚Ì’†SˆÊ’u
+    // å·¦å³ã®é¼»ã®ç©´ã®ä¸­å¿ƒä½ç½®
     const nostrils = [
       { x: 150, y: 200 },
       { x: 250, y: 200 }
     ];
 
-    // •@‚­‚»‚Ì‰Šúİ’è
+    // é¼»ããã®åˆæœŸè¨­å®š
     const booger = {
       x: nostrils[0].x,
       y: nostrils[0].y,
       radius: 5,
-      state: "growing", // "growing" ‚Ü‚½‚Í "falling"
+      state: "growing", // "growing" ã¾ãŸã¯ "falling"
       opacity: 1
     };
 
-    let growthRate = 0.02; // ¬’·‘¬“x (px/ms)
+    let growthRate = 0.02; // æˆé•·é€Ÿåº¦ (px/ms)
 
-    // ƒ^[ƒQƒbƒgƒhƒbƒg‚Ìİ’è
+    // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®è¨­å®š
     const target = { x: 0, y: 0, radius: 10 };
     let targetActive = false;
     let targetTimer = 0;
-    const targetInterval = 2000;  // 2•b‚²‚Æ‚ÉˆÊ’uXV
-    const targetActivationThreshold = 20; // •@‚­‚»‚ª20pxˆÈã‚É‚È‚Á‚½‚çƒ^[ƒQƒbƒg•\¦
+    const targetInterval = 2000;  // 2ç§’ã”ã¨ã«ä½ç½®æ›´æ–°
+    const targetActivationThreshold = 20; // é¼»ãããŒ20pxä»¥ä¸Šã«ãªã£ãŸã‚‰ã‚¿ãƒ¼ã‚²ãƒƒãƒˆè¡¨ç¤º
 
-    // ƒQ[ƒ€‚Ì•Ï”
-    let score = 0;  // ³í‚Éƒ^ƒbƒv‚ÅƒŠƒZƒbƒg‚Å‚«‚½•@‚­‚»‚Ì”
-    const gameDuration = 30000; // 30•bƒ^ƒCƒ€ƒgƒ‰ƒCƒAƒ‹
+    // ã‚²ãƒ¼ãƒ ã®å¤‰æ•°
+    let score = 0;  // æ­£å¸¸ã«ã‚¿ãƒƒãƒ—ã§ãƒªã‚»ãƒƒãƒˆã§ããŸé¼»ããã®æ•°
+    const gameDuration = 30000; // 30ç§’ã‚¿ã‚¤ãƒ ãƒˆãƒ©ã‚¤ã‚¢ãƒ«
     let startTime = null;
     let lastTime = null;
 
-    // ‰~“à‚Ìƒ‰ƒ“ƒ_ƒ€‚ÈˆÊ’u‚ğæ“¾‚·‚éŠÖ”
+    // å††å†…ã®ãƒ©ãƒ³ãƒ€ãƒ ãªä½ç½®ã‚’å–å¾—ã™ã‚‹é–¢æ•°
     function getRandomPointInCircle(maxR) {
       const angle = Math.random() * 2 * Math.PI;
       const r = Math.sqrt(Math.random()) * maxR;
       return { x: r * Math.cos(angle), y: r * Math.sin(angle) };
     }
 
-    // ƒ^[ƒQƒbƒgƒhƒbƒg‚ÌˆÊ’u‚ğÄİ’è‚·‚éŠÖ”
+    // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®ä½ç½®ã‚’å†è¨­å®šã™ã‚‹é–¢æ•°
     function repositionTarget() {
       const maxOffset = Math.max(booger.radius - target.radius, 0);
       const point = getRandomPointInCircle(maxOffset);
@@ -76,14 +78,14 @@
       target.y = booger.y + point.y;
     }
 
-    // •@‚­‚»‚ªoŒ»‚·‚é•@‚ÌŒŠ‚ğƒ‰ƒ“ƒ_ƒ€‚ÉŒˆ‚ß‚éŠÖ”
+    // é¼»ãããŒå‡ºç¾ã™ã‚‹é¼»ã®ç©´ã‚’ãƒ©ãƒ³ãƒ€ãƒ ã«æ±ºã‚ã‚‹é–¢æ•°
     function chooseRandomNostril() {
       const index = Math.random() < 0.5 ? 0 : 1;
       booger.x = nostrils[index].x;
       booger.y = nostrils[index].y;
     }
 
-    // •@‚­‚»‚ğƒŠƒZƒbƒg‚·‚éŠÖ”i³í‚Èƒ^ƒbƒv‚àA—‰º‚àg—pj
+    // é¼»ããã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹é–¢æ•°ï¼ˆæ­£å¸¸ãªã‚¿ãƒƒãƒ—æ™‚ã‚‚ã€è½ä¸‹æ™‚ã‚‚ä½¿ç”¨ï¼‰
     function resetBooger() {
       booger.radius = 5;
       booger.state = "growing";
@@ -93,7 +95,7 @@
       targetTimer = 0;
     }
 
-    // ƒQ[ƒ€ŠJn‚Ì‰Šú‰»
+    // ã‚²ãƒ¼ãƒ é–‹å§‹æ™‚ã®åˆæœŸåŒ–
     function startGame() {
       gameState = "playing";
       startTime = performance.now();
@@ -102,10 +104,10 @@
       resetBooger();
     }
 
-    // XVˆ—
+    // æ›´æ–°å‡¦ç†
     function update(deltaTime) {
       if (gameState === "playing") {
-        // ƒ^ƒCƒ€ƒgƒ‰ƒCƒAƒ‹I—¹ƒ`ƒFƒbƒN
+        // ã‚¿ã‚¤ãƒ ãƒˆãƒ©ã‚¤ã‚¢ãƒ«çµ‚äº†ãƒã‚§ãƒƒã‚¯
         if (performance.now() - startTime >= gameDuration) {
           gameState = "gameOver";
           gameOverTime = performance.now();
@@ -115,13 +117,13 @@
         if (booger.state === "growing") {
           booger.radius += growthRate * deltaTime;
           if (booger.radius > maxRadius) {
-            // •@‚­‚»‚ª•@‚ÌŒŠ‚æ‚è‘å‚«‚­‚È‚Á‚½‚ç—‰ºó‘Ô‚Öi‚±‚Ìê‡‚ÍƒXƒRƒA‰ÁZ‚È‚µj
+            // é¼»ãããŒé¼»ã®ç©´ã‚ˆã‚Šå¤§ãããªã£ãŸã‚‰è½ä¸‹çŠ¶æ…‹ã¸ï¼ˆã“ã®å ´åˆã¯ã‚¹ã‚³ã‚¢åŠ ç®—ãªã—ï¼‰
             booger.state = "falling";
-            booger.fallSpeed = 0.1; // —‰º‘¬“x
+            booger.fallSpeed = 0.1; // è½ä¸‹é€Ÿåº¦
             booger.opacity = 1;
             targetActive = false;
           } else {
-            // ˆê’èƒTƒCƒYˆÈã‚È‚çƒ^[ƒQƒbƒg‚ğ•\¦
+            // ä¸€å®šã‚µã‚¤ã‚ºä»¥ä¸Šãªã‚‰ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’è¡¨ç¤º
             if (booger.radius >= targetActivationThreshold) {
               targetTimer += deltaTime;
               if (!targetActive) {
@@ -138,57 +140,57 @@
             }
           }
         } else if (booger.state === "falling") {
-          // —‰º•ƒtƒF[ƒhƒAƒEƒgˆ—
+          // è½ä¸‹ï¼†ãƒ•ã‚§ãƒ¼ãƒ‰ã‚¢ã‚¦ãƒˆå‡¦ç†
           booger.y += booger.fallSpeed * deltaTime;
           booger.opacity -= 0.001 * deltaTime;
           if (booger.opacity <= 0 || booger.y > canvas.height) {
-            // —‰ºŠ®—¹i‚±‚Ìê‡‚ÍƒXƒRƒA‰ÁZ‚µ‚È‚¢j
+            // è½ä¸‹å®Œäº†ï¼ˆã“ã®å ´åˆã¯ã‚¹ã‚³ã‚¢åŠ ç®—ã—ãªã„ï¼‰
             resetBooger();
           }
         }
       } else if (gameState === "gameOver") {
-        // ƒQ[ƒ€ƒI[ƒo[•\¦‚©‚ç5•bŒã‚É‰Šú‘Ò‹@ó‘Ô‚Ö–ß‚é
+        // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼è¡¨ç¤ºã‹ã‚‰5ç§’å¾Œã«åˆæœŸå¾…æ©ŸçŠ¶æ…‹ã¸æˆ»ã‚‹
         if (performance.now() - gameOverTime >= 5000) {
           gameState = "waiting";
         }
       }
     }
 
-    // •@‚Ì—ÖŠs‚ğ•`‰æ‚·‚éŠÖ”
+    // é¼»ã®è¼ªéƒ­ã‚’æç”»ã™ã‚‹é–¢æ•°
     function drawNose(ctx) {
-      // ‡@ •@‚ÌŒŠ•”•ªi“h‚è‚Â‚Ô‚µj
+      // â‘  é¼»ã®ç©´éƒ¨åˆ†ï¼ˆå¡—ã‚Šã¤ã¶ã—ï¼‰
       ctx.fillStyle = "#555";
-      // ¶ŒŠ
+      // å·¦ç©´
       ctx.beginPath();
       ctx.arc(150, 200, 40, 0, Math.PI * 2);
       ctx.fill();
-      // ‰EŒŠ
+      // å³ç©´
       ctx.beginPath();
       ctx.arc(250, 200, 40, 0, Math.PI * 2);
       ctx.fill();
       
-      // ‡A •@‚ÌŠO‘¤—ÖŠsiüj
+      // â‘¡ é¼»ã®å¤–å´è¼ªéƒ­ï¼ˆç·šï¼‰
       ctx.strokeStyle = "black";
       ctx.lineWidth = 20;
       ctx.lineCap = "round";
-      // ¶‘¤‚ÌƒJ[ƒu
+      // å·¦å´ã®ã‚«ãƒ¼ãƒ–
       ctx.beginPath();
       ctx.moveTo(110, 250);
       ctx.quadraticCurveTo(60, 200, 150, 50);
       ctx.stroke();
-      // ‰E‘¤‚ÌƒJ[ƒu
+      // å³å´ã®ã‚«ãƒ¼ãƒ–
       ctx.beginPath();
       ctx.moveTo(290, 250);
       ctx.quadraticCurveTo(340, 200, 250, 50);
       ctx.stroke();
     }
 
-    // •`‰æˆ—
+    // æç”»å‡¦ç†
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       if (gameState === "waiting") {
-        // ŠJn‘O‚ÌƒƒbƒZ[ƒW
+        // é–‹å§‹å‰ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
         ctx.fillStyle = "black";
         ctx.font = "24px Arial";
         ctx.textAlign = "center";
@@ -196,7 +198,7 @@
         return;
       }
 
-      // •@‚ÌŒŠi“_ü‰~A–ÚˆÀ—pj‚Ì•`‰æ
+      // é¼»ã®ç©´ï¼ˆç‚¹ç·šå††ã€ç›®å®‰ç”¨ï¼‰ã®æç”»
       ctx.save();
       ctx.strokeStyle = "gray";
       ctx.lineWidth = 2;
@@ -208,10 +210,10 @@
       });
       ctx.restore();
 
-      // •@‚Ì—ÖŠs•`‰æ
+      // é¼»ã®è¼ªéƒ­æç”»
       drawNose(ctx);
 
-      // •@‚­‚»‚Ì•`‰æió‘Ô‚É‰‚¶‚Ä“§–¾“x•ÏXj
+      // é¼»ããã®æç”»ï¼ˆçŠ¶æ…‹ã«å¿œã˜ã¦é€æ˜åº¦å¤‰æ›´ï¼‰
       ctx.save();
       ctx.globalAlpha = booger.opacity;
       ctx.fillStyle = "green";
@@ -220,7 +222,7 @@
       ctx.fill();
       ctx.restore();
 
-      // ƒ^[ƒQƒbƒgƒhƒbƒg‚Ì•`‰æ
+      // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®æç”»
       if (targetActive) {
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -228,7 +230,7 @@
         ctx.fill();
       }
 
-      // ƒQ[ƒ€ƒvƒŒƒC’†‚ÍƒXƒRƒA‚Æc‚èŠÔ‚ğ•\¦
+      // ã‚²ãƒ¼ãƒ ãƒ—ãƒ¬ã‚¤ä¸­ã¯ã‚¹ã‚³ã‚¢ã¨æ®‹ã‚Šæ™‚é–“ã‚’è¡¨ç¤º
       if (gameState === "playing") {
         ctx.fillStyle = "black";
         ctx.font = "20px Arial";
@@ -238,7 +240,7 @@
         ctx.fillText("Time: " + Math.floor(timeLeft / 1000), 10, 60);
       }
 
-      // ƒQ[ƒ€ƒI[ƒo[ó‘Ô‚È‚çAƒXƒRƒA‚ğc‚µ‚½Œ‹‰Ê•¶‚ğ•\¦
+      // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼çŠ¶æ…‹ãªã‚‰ã€ã‚¹ã‚³ã‚¢ã‚’æ®‹ã—ãŸçµæœæ–‡ã‚’è¡¨ç¤º
       if (gameState === "gameOver") {
         ctx.fillStyle = "red";
         ctx.font = "18px Arial";
@@ -247,7 +249,7 @@
       }
     }
 
-    // ƒQ[ƒ€ƒ‹[ƒv
+    // ã‚²ãƒ¼ãƒ ãƒ«ãƒ¼ãƒ—
     function gameLoop(time) {
       if (!lastTime) {
         lastTime = time;
@@ -260,28 +262,28 @@
     }
     requestAnimationFrame(gameLoop);
 
-    // ƒNƒŠƒbƒN^ƒ^ƒbƒv‹¤’Êˆ—
+    // ã‚¯ãƒªãƒƒã‚¯ï¼ã‚¿ãƒƒãƒ—å…±é€šå‡¦ç†
     function handleTap(x, y) {
       if (gameState === "waiting") {
-        // ƒQ[ƒ€ŠJn
+        // ã‚²ãƒ¼ãƒ é–‹å§‹
         startGame();
         return;
       }
-      if (gameState !== "playing") return; // ƒQ[ƒ€ƒI[ƒo[’†‚Íƒ^ƒbƒv–³‹
+      if (gameState !== "playing") return; // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼ä¸­ã¯ã‚¿ãƒƒãƒ—ç„¡è¦–
 
-      // ƒ^[ƒQƒbƒg‚ª•\¦‚³‚ê‚Ä‚¢‚ÄA‚©‚Â•@‚­‚»‚ª¬’·ó‘Ô‚È‚ç
+      // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã¦ã€ã‹ã¤é¼»ãããŒæˆé•·çŠ¶æ…‹ãªã‚‰
       if (targetActive && booger.state === "growing") {
         const dx = x - target.x;
         const dy = y - target.y;
         if (Math.sqrt(dx * dx + dy * dy) <= target.radius) {
-          score++;  // ³í‚Èƒ^ƒbƒv‚ÅƒXƒRƒA‰ÁZ
+          score++;  // æ­£å¸¸ãªã‚¿ãƒƒãƒ—ã§ã‚¹ã‚³ã‚¢åŠ ç®—
           resetBooger();
           return;
         }
       }
     }
 
-    // ƒNƒŠƒbƒNƒCƒxƒ“ƒg
+    // ã‚¯ãƒªãƒƒã‚¯ã‚¤ãƒ™ãƒ³ãƒˆ
     canvas.addEventListener("click", function(e) {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -289,7 +291,7 @@
       handleTap(x, y);
     });
 
-    // ƒ^ƒbƒ`ƒCƒxƒ“ƒgiƒXƒ}ƒzŒü‚¯j
+    // ã‚¿ãƒƒãƒã‚¤ãƒ™ãƒ³ãƒˆï¼ˆã‚¹ãƒãƒ›å‘ã‘ï¼‰
     canvas.addEventListener("touchstart", function(e) {
       e.preventDefault();
       const rect = canvas.getBoundingClientRect();
