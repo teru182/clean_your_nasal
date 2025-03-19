@@ -2,6 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <title>hanakuso game 3.3</title>
   <style>
     body {
@@ -24,46 +26,46 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // maxRadius ‚ğ•@‚ÌŒŠi“_ü‰~j‚Ì”¼Œa‚Æ‚µ‚Äg—p
+    // maxRadius ã‚’é¼»ã®ç©´ï¼ˆç‚¹ç·šå††ï¼‰ã®åŠå¾„ã¨ã—ã¦ä½¿ç”¨
     const maxRadius = 40; 
 
-    // ¶‰E‚Ì•@‚ÌŒŠ‚Ì’†SˆÊ’u‚ğİ’è
+    // å·¦å³ã®é¼»ã®ç©´ã®ä¸­å¿ƒä½ç½®ã‚’è¨­å®š
     const nostrils = [
       { x: 150, y: 200 },
       { x: 250, y: 200 }
     ];
 
-    // •@‚­‚»‚Ì‰Šúİ’èi‰‰ñ‚Í¶‚Ì•@‚ÌŒŠ‚©‚ço‚éj
+    // é¼»ããã®åˆæœŸè¨­å®šï¼ˆåˆå›ã¯å·¦ã®é¼»ã®ç©´ã‹ã‚‰å‡ºã‚‹ï¼‰
     const booger = {
       x: nostrils[0].x,
       y: nostrils[0].y,
       radius: 5
     };
 
-    let growthRate = 0.02; // ¬’·‘¬“x (px/ms)
+    let growthRate = 0.02; // æˆé•·é€Ÿåº¦ (px/ms)
 
-    // ƒ^[ƒQƒbƒgƒhƒbƒg‚Ìİ’è
+    // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®è¨­å®š
     const target = { x: 0, y: 0, radius: 5 };
     let targetActive = false;
     let targetTimer = 0;
-    const targetInterval = 2000;  // 2•b‚²‚Æ‚ÉˆÊ’uXV
-    const targetActivationThreshold = 20; // •@‚­‚»‚ª20pxˆÈã‚È‚çƒ^[ƒQƒbƒg•\¦
+    const targetInterval = 2000;  // 2ç§’ã”ã¨ã«ä½ç½®æ›´æ–°
+    const targetActivationThreshold = 20; // é¼»ãããŒ20pxä»¥ä¸Šãªã‚‰ã‚¿ãƒ¼ã‚²ãƒƒãƒˆè¡¨ç¤º
 
-    // ƒQ[ƒ€‚Ì•Ï”
+    // ã‚²ãƒ¼ãƒ ã®å¤‰æ•°
     let score = 0;
     let gameOver = false;
-    const gameDuration = 30000; // 30•b§ŒÀ
+    const gameDuration = 30000; // 30ç§’åˆ¶é™
     let startTime = null;
     let lastTime = null;
 
-    // ‰~“à‚Ìƒ‰ƒ“ƒ_ƒ€‚ÈˆÊ’u‚ğæ“¾‚·‚éŠÖ”
+    // å††å†…ã®ãƒ©ãƒ³ãƒ€ãƒ ãªä½ç½®ã‚’å–å¾—ã™ã‚‹é–¢æ•°
     function getRandomPointInCircle(maxR) {
       const angle = Math.random() * 2 * Math.PI;
       const r = Math.sqrt(Math.random()) * maxR;
       return { x: r * Math.cos(angle), y: r * Math.sin(angle) };
     }
 
-    // ƒ^[ƒQƒbƒgƒhƒbƒg‚ÌˆÊ’u‚ğÄİ’è‚·‚éŠÖ”
+    // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®ä½ç½®ã‚’å†è¨­å®šã™ã‚‹é–¢æ•°
     function repositionTarget() {
       const maxOffset = Math.max(booger.radius - target.radius, 0);
       const point = getRandomPointInCircle(maxOffset);
@@ -71,14 +73,14 @@
       target.y = booger.y + point.y;
     }
 
-    // •@‚­‚»‚ª‚Ç‚¿‚ç‚Ì•@‚ÌŒŠ‚©‚ço‚é‚©Aƒ‰ƒ“ƒ_ƒ€‚ÉŒˆ‚ß‚éŠÖ”
+    // é¼»ãããŒã©ã¡ã‚‰ã®é¼»ã®ç©´ã‹ã‚‰å‡ºã‚‹ã‹ã€ãƒ©ãƒ³ãƒ€ãƒ ã«æ±ºã‚ã‚‹é–¢æ•°
     function chooseRandomNostril() {
       const index = Math.random() < 0.5 ? 0 : 1;
       booger.x = nostrils[index].x;
       booger.y = nostrils[index].y;
     }
 
-    // XVˆ—
+    // æ›´æ–°å‡¦ç†
     function update(deltaTime) {
       if (!gameOver) {
         booger.radius += growthRate * deltaTime;
@@ -86,7 +88,7 @@
           gameOver = true;
         }
 
-        // •@‚­‚»‚ªˆê’èƒTƒCƒYˆÈã‚È‚çƒ^[ƒQƒbƒg‚ğ•\¦
+        // é¼»ãããŒä¸€å®šã‚µã‚¤ã‚ºä»¥ä¸Šãªã‚‰ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’è¡¨ç¤º
         if (booger.radius >= targetActivationThreshold) {
           targetTimer += deltaTime;
           if (!targetActive) {
@@ -104,41 +106,41 @@
       }
     }
 
-    // •@‚ÌŠO‘¤—ÖŠs‚ğ•`‰æ‚·‚éŠÖ”
+    // é¼»ã®å¤–å´è¼ªéƒ­ã‚’æç”»ã™ã‚‹é–¢æ•°
     function drawNose(ctx) {
-      // === 1) ¶‰E‚ÌŒŠi“h‚è‚Â‚Ô‚µj‚ğ•`‰æ ===
-      ctx.fillStyle = "#555";  // ŒŠ‚ÌFiƒOƒŒ[j
-      // ¶ŒŠ
+      // === 1) å·¦å³ã®ç©´ï¼ˆå¡—ã‚Šã¤ã¶ã—ï¼‰ã‚’æç”» ===
+      ctx.fillStyle = "#555";  // ç©´ã®è‰²ï¼ˆã‚°ãƒ¬ãƒ¼ï¼‰
+      // å·¦ç©´
       ctx.beginPath();
       ctx.arc(150, 200, 40, 0, Math.PI * 2);
       ctx.fill();
-      // ‰EŒŠ
+      // å³ç©´
       ctx.beginPath();
       ctx.arc(250, 200, 40, 0, Math.PI * 2);
       ctx.fill();
 
-      // === 2) •@‚ÌŠO‘¤—ÖŠs‚ğ•`‰æiüj ===
+      // === 2) é¼»ã®å¤–å´è¼ªéƒ­ã‚’æç”»ï¼ˆç·šï¼‰ ===
       ctx.strokeStyle = "black";
-      ctx.lineWidth = 20; // ‚¿‚å‚Á‚Æ‘¾‚ß
+      ctx.lineWidth = 20; // ã¡ã‚‡ã£ã¨å¤ªã‚
       ctx.lineCap = "round";
-      // ¶‘¤‚ÌƒJ[ƒu
+      // å·¦å´ã®ã‚«ãƒ¼ãƒ–
       ctx.beginPath();
       ctx.moveTo(110, 250);
       ctx.quadraticCurveTo(60, 200, 150, 50);
       ctx.stroke();
 
-      // ‰E‘¤‚ÌƒJ[ƒu
+      // å³å´ã®ã‚«ãƒ¼ãƒ–
       ctx.beginPath();
       ctx.moveTo(290, 250);
       ctx.quadraticCurveTo(340, 200, 250, 50);
       ctx.stroke();
     }
 
-    // •`‰æˆ—
+    // æç”»å‡¦ç†
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // •@‚ÌŒŠi¶‰E‚Ì“_ü‚Ì‰~j‚Ì•`‰æ
+      // é¼»ã®ç©´ï¼ˆå·¦å³ã®ç‚¹ç·šã®å††ï¼‰ã®æç”»
       ctx.save();
       ctx.strokeStyle = "gray";
       ctx.lineWidth = 2;
@@ -150,16 +152,16 @@
       });
       ctx.restore();
 
-      // •@‚Ì—ÖŠs‚Ì•`‰æ
+      // é¼»ã®è¼ªéƒ­ã®æç”»
       drawNose(ctx);
 
-      // •@‚­‚»‚Ì•`‰æi—Î‚Ì‰~j
+      // é¼»ããã®æç”»ï¼ˆç·‘ã®å††ï¼‰
       ctx.fillStyle = "green";
       ctx.beginPath();
       ctx.arc(booger.x, booger.y, booger.radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // ƒ^[ƒQƒbƒgƒhƒbƒg‚Ì•`‰æiÔ‚¢‰~j
+      // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆã®æç”»ï¼ˆèµ¤ã„å††ï¼‰
       if (targetActive) {
         ctx.fillStyle = "red";
         ctx.beginPath();
@@ -167,14 +169,14 @@
         ctx.fill();
       }
 
-      // ƒXƒRƒA‚Æc‚èŠÔ‚Ì•\¦
+      // ã‚¹ã‚³ã‚¢ã¨æ®‹ã‚Šæ™‚é–“ã®è¡¨ç¤º
       ctx.fillStyle = "black";
       ctx.font = "20px Arial";
       ctx.fillText("Score: " + score, 10, 30);
       const timeLeft = Math.max(0, gameDuration - (performance.now() - startTime));
       ctx.fillText("Time: " + Math.floor(timeLeft / 1000), 10, 60);
 
-      // ƒQ[ƒ€ƒI[ƒo[‚ÌƒƒbƒZ[ƒW
+      // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼æ™‚ã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
       if (gameOver || timeLeft <= 0) {
         gameOver = true;
         ctx.fillStyle = "red";
@@ -183,7 +185,7 @@
       }
     }
 
-    // ƒQ[ƒ€ƒ‹[ƒv
+    // ã‚²ãƒ¼ãƒ ãƒ«ãƒ¼ãƒ—
     function gameLoop(time) {
       if (!startTime) {
         startTime = time;
@@ -199,22 +201,22 @@
     }
     requestAnimationFrame(gameLoop);
 
-    // ƒNƒŠƒbƒN^ƒ^ƒbƒv‹¤’Ê‚Ìˆ—‚ğŠÖ”‰»
+    // ã‚¯ãƒªãƒƒã‚¯ï¼ã‚¿ãƒƒãƒ—å…±é€šã®å‡¦ç†ã‚’é–¢æ•°åŒ–
     function handleTap(x, y) {
-      // ƒQ[ƒ€ƒI[ƒo[‚ÍÄƒXƒ^[ƒg
+      // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼æ™‚ã¯å†ã‚¹ã‚¿ãƒ¼ãƒˆ
       if (gameOver || (performance.now() - startTime) >= gameDuration) {
         resetGame();
         return;
       }
 
-      // ƒ^[ƒQƒbƒgƒhƒbƒg‚ª•\¦‚³‚ê‚Ä‚¢‚éê‡A‚»‚±‚ªƒNƒŠƒbƒN^ƒ^ƒbƒv‚³‚ê‚½‚ç•@‚­‚»‚Ì¬’·‚ğƒŠƒZƒbƒg‚·‚é
+      // ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒ‰ãƒƒãƒˆãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹å ´åˆã€ãã“ãŒã‚¯ãƒªãƒƒã‚¯ï¼ã‚¿ãƒƒãƒ—ã•ã‚ŒãŸã‚‰é¼»ããã®æˆé•·ã‚’ãƒªã‚»ãƒƒãƒˆã™ã‚‹
       if (targetActive) {
         const dx = x - target.x;
         const dy = y - target.y;
         if (Math.sqrt(dx * dx + dy * dy) <= target.radius) {
           score += 100;
-          booger.radius = 5; // •@‚­‚»‚ÌƒTƒCƒY‚ğƒŠƒZƒbƒg
-          chooseRandomNostril(); // ¶‰E‚Ç‚¿‚ç‚©‚Ì•@‚ÌŒŠ‚ÉÄoŒ»
+          booger.radius = 5; // é¼»ããã®ã‚µã‚¤ã‚ºã‚’ãƒªã‚»ãƒƒãƒˆ
+          chooseRandomNostril(); // å·¦å³ã©ã¡ã‚‰ã‹ã®é¼»ã®ç©´ã«å†å‡ºç¾
           targetActive = false;
           targetTimer = 0;
           return;
@@ -222,7 +224,7 @@
       }
     }
 
-    // ƒNƒŠƒbƒNƒCƒxƒ“ƒg
+    // ã‚¯ãƒªãƒƒã‚¯ã‚¤ãƒ™ãƒ³ãƒˆ
     canvas.addEventListener("click", function(e) {
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -230,9 +232,9 @@
       handleTap(x, y);
     });
 
-    // ƒ^ƒbƒ`ƒCƒxƒ“ƒgiƒXƒ}ƒzŒü‚¯j
+    // ã‚¿ãƒƒãƒã‚¤ãƒ™ãƒ³ãƒˆï¼ˆã‚¹ãƒãƒ›å‘ã‘ï¼‰
     canvas.addEventListener("touchstart", function(e) {
-      e.preventDefault(); // ƒXƒNƒ[ƒ‹–h~
+      e.preventDefault(); // ã‚¹ã‚¯ãƒ­ãƒ¼ãƒ«é˜²æ­¢
       const rect = canvas.getBoundingClientRect();
       const touch = e.touches[0];
       const x = touch.clientX - rect.left;
@@ -240,7 +242,7 @@
       handleTap(x, y);
     });
 
-    // ƒQ[ƒ€ƒŠƒZƒbƒgˆ—
+    // ã‚²ãƒ¼ãƒ ãƒªã‚»ãƒƒãƒˆå‡¦ç†
     function resetGame() {
       score = 0;
       booger.radius = 5;
